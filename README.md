@@ -3,6 +3,7 @@
 </p>
 
 <pre>
+<!-- STATS:START -->  
 VIKASRANAX  ---------------------------------------------------------------
 .   OS: ................................Windows
 .   Languages.Computer: ................JavaScript,Python,HTML,CSS,Node.js,REACT,Docker

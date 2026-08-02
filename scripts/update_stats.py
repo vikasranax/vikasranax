@@ -1,0 +1,176 @@
+"""
+Computes account-wide stats (public, non-fork repos) -- repo count, commits,
+stars, total lines of code, and a language-percentage breakdown -- and writes
+them as a plain-text terminal block into README.md between the
+STATS:START / STATS:END markers. No third-party dependencies, stdlib only.
+"""
+
+import json
+import os
+import re
+import subprocess
+import tempfile
+import urllib.request
+from datetime import datetime, timezone
+
+USERNAME = os.environ.get("GH_USERNAME", "vikasranax")
+TOKEN = os.environ.get("GH_TOKEN")
+API = "https://api.github.com"
+README_PATH = "README.md"
+
+BAR_WIDTH = 20        # characters wide for each language bar
+TOP_N_LANGUAGES = 8   # show top N languages, group the rest as "Other"
+
+
+def gh_request(url, accept="application/vnd.github+json"):
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {TOKEN}",
+            "Accept": accept,
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": USERNAME,
+        },
+    )
+    with urllib.request.urlopen(req) as resp:
+        return json.loads(resp.read().decode())
+
+
+def get_repos():
+    """All public, non-fork repos owned by the user."""
+    repos, page = [], 1
+    while True:
+        url = f"{API}/users/{USERNAME}/repos?type=owner&per_page=100&page={page}"
+        batch = gh_request(url)
+        if not batch:
+            break
+        repos.extend(r for r in batch if not r.get("fork"))
+        if len(batch) < 100:
+            break
+        page += 1
+    return repos
+
+
+def get_total_commits():
+    """Total commits authored by the user, across all public repos on GitHub."""
+    url = f"{API}/search/commits?q=author:{USERNAME}"
+    data = gh_request(url, accept="application/vnd.github.cloak-preview+json")
+    return data.get("total_count", 0)
+
+
+def get_total_loc(repos):
+    """Shallow-clones each repo and sums 'code' lines via cloc."""
+    total = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        for repo in repos:
+            dest = os.path.join(tmp, repo["name"])
+            try:
+                subprocess.run(
+                    ["git", "clone", "--depth", "1", "--quiet",
+                     repo["clone_url"], dest],
+                    check=True, timeout=120,
+                )
+            except Exception:
+                continue
+
+            try:
+                result = subprocess.run(
+                    ["cloc", "--json", dest],
+                    check=True, capture_output=True, text=True, timeout=120,
+                )
+                report = json.loads(result.stdout)
+                total += report.get("SUM", {}).get("code", 0)
+            except Exception:
+                continue
+    return total
+
+
+def get_language_breakdown(repos):
+    """
+    Sums bytes-per-language across all repos (GitHub's own language
+    detection, via the /languages endpoint) and returns a sorted list of
+    (language, percentage) tuples.
+    """
+    totals = {}
+    for repo in repos:
+        try:
+            langs = gh_request(f"{API}/repos/{USERNAME}/{repo['name']}/languages")
+        except Exception:
+            continue
+        for lang, byte_count in langs.items():
+            totals[lang] = totals.get(lang, 0) + byte_count
+
+    grand_total = sum(totals.values())
+    if grand_total == 0:
+        return []
+
+    ranked = sorted(totals.items(), key=lambda kv: kv[1], reverse=True)
+    breakdown = [(lang, (count / grand_total) * 100) for lang, count in ranked]
+
+    if len(breakdown) > TOP_N_LANGUAGES:
+        top = breakdown[:TOP_N_LANGUAGES]
+        other_pct = sum(pct for _, pct in breakdown[TOP_N_LANGUAGES:])
+        top.append(("Other", other_pct))
+        breakdown = top
+
+    return breakdown
+
+
+def make_bar(pct):
+    filled = round((pct / 100) * BAR_WIDTH)
+    return "█" * filled + "░" * (BAR_WIDTH - filled)
+
+
+def render_block(stats, languages):
+    name_width = max((len(lang) for lang, _ in languages), default=4)
+    lang_lines = "\n".join(
+        f"  {lang:<{name_width}}  {make_bar(pct)}  {pct:5.1f}%"
+        for lang, pct in languages
+    ) or "  (no data)"
+
+    return (
+        "```text\n"
+        "$ ./stats.sh --user " + USERNAME + "\n\n"
+        f"Repos         : {stats['REPOS']}\n"
+        f"Commits       : {stats['COMMITS']}\n"
+        f"Stars         : {stats['STARS']}\n"
+        f"Lines of code : {stats['LOC']}\n\n"
+        "Languages:\n"
+        f"{lang_lines}\n\n"
+        f"last sync: {stats['UPDATED']}\n"
+        "```"
+    )
+
+
+def update_readme(block):
+    with open(README_PATH, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    new_content = re.sub(
+        r"(<!-- STATS:START -->)(.*?)(<!-- STATS:END -->)",
+        lambda m: f"{m.group(1)}\n{block}\n{m.group(3)}",
+        content,
+        flags=re.DOTALL,
+    )
+
+    with open(README_PATH, "w", encoding="utf-8") as f:
+        f.write(new_content)
+
+
+def main():
+    repos = get_repos()
+    stats = {
+        "REPOS": len(repos),
+        "COMMITS": f"{get_total_commits():,}",
+        "STARS": f"{sum(r.get('stargazers_count', 0) for r in repos):,}",
+        "LOC": f"{get_total_loc(repos):,}",
+        "UPDATED": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+    }
+    languages = get_language_breakdown(repos)
+    block = render_block(stats, languages)
+    update_readme(block)
+    print("Updated README with:\n" + block)
+
+
+if __name__ == "__main__":
+    main()

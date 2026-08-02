@@ -116,30 +116,34 @@ def get_language_breakdown(repos):
     return breakdown
 
 
-def make_bar(pct):
-    filled = round((pct / 100) * BAR_WIDTH)
-    return "█" * filled + "░" * (BAR_WIDTH - filled)
+def dotted_line(label, value, total_width=70):
+    """Formats a 'Label: ....... value' line matching the existing pre-block style."""
+    prefix = f".   {label}: "
+    dots_needed = max(3, total_width - len(prefix) - len(str(value)))
+    return f"{prefix}{'.' * dots_needed}  {value}"
 
 
 def render_block(stats, languages):
-    name_width = max((len(lang) for lang, _ in languages), default=4)
-    lang_lines = "\n".join(
-        f"  {lang:<{name_width}}  {make_bar(pct)}  {pct:5.1f}%"
-        for lang, pct in languages
-    ) or "  (no data)"
+    lines = [
+        "-   GITHUB STATS -------------------------------------------------------",
+        dotted_line("Repos", stats["REPOS"]),
+        dotted_line("Commits", stats["COMMITS"]),
+        dotted_line("Stars", stats["STARS"]),
+        dotted_line("Lines of code", stats["LOC"]),
+        ".",
+        "-   LANGUAGES ------------------------------------------------------------",
+    ]
 
-    return (
-        "```text\n"
-        "$ ./stats.sh --user " + USERNAME + "\n\n"
-        f"Repos         : {stats['REPOS']}\n"
-        f"Commits       : {stats['COMMITS']}\n"
-        f"Stars         : {stats['STARS']}\n"
-        f"Lines of code : {stats['LOC']}\n\n"
-        "Languages:\n"
-        f"{lang_lines}\n\n"
-        f"last sync: {stats['UPDATED']}\n"
-        "```"
-    )
+    if languages:
+        for lang, pct in languages:
+            lines.append(dotted_line(lang, f"{pct:.1f}%"))
+    else:
+        lines.append(".   (no data)")
+
+    lines.append(".")
+    lines.append(f".   last sync: {stats['UPDATED']}")
+
+    return "\n".join(lines)
 
 
 def update_readme(block):

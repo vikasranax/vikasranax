@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&pause=1000&color=2ECC71&center=true&vCenter=true&width=440&lines=%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A5%8D%E0%A4%AF+%E0%A5%A4+%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%A3%E0%A5%81%E0%A4%A4%E0%A4%BE+%E0%A5%A4+%E0%A4%AE%E0%A5%8B%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%83;Learner" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&pause=1000&color=6A99B4&center=true&vCenter=true&width=440&lines=%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A5%8D%E0%A4%AF+%E0%A5%A4+%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%A3%E0%A5%81%E0%A4%A4%E0%A4%BE+%E0%A5%A4+%E0%A4%AE%E0%A5%8B%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%83;Learner" alt="Typing SVG" />
 </p>
 
 <pre>
@@ -34,6 +34,6 @@ VIKASRANAX  ---------------------------------------------------------------
 </pre>
 
 <div align="center">
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:24243e,50:302b63,100:0f0c29&height=60&section=footer"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:138808,50:FFFFFF,100:FF9933&height=60&section=footer"/>
 
 </div>

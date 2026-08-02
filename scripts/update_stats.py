@@ -116,20 +116,28 @@ def get_language_breakdown(repos):
     return breakdown
 
 
-def dotted_line(label, value, total_width=70):
-    """Formats a 'Label: ....... value' line matching the existing pre-block style."""
+SAFFRON = "#FF9933"
+GREEN = "#138808"
+
+
+def dotted_line(label, value, total_width=70, color=None):
+    """Formats a 'Label: ....... value' line matching the existing pre-block style.
+    If color is given, only the value is wrapped in a colored span (dot count
+    is still based on the plain value length, so alignment stays correct)."""
     prefix = f".   {label}: "
     dots_needed = max(3, total_width - len(prefix) - len(str(value)))
-    return f"{prefix}{'.' * dots_needed}  {value}"
+    dots = "." * dots_needed
+    value_str = f'<span style="color:{color}">{value}</span>' if color else str(value)
+    return f"{prefix}{dots}  {value_str}"
 
 
 def render_block(stats, languages):
     lines = [
         "-   GITHUB STATS -------------------------------------------------------",
-        dotted_line("Repos", stats["REPOS"]),
+        dotted_line("Repos", stats["REPOS"], color=SAFFRON),
         dotted_line("Commits", stats["COMMITS"]),
         dotted_line("Stars", stats["STARS"]),
-        dotted_line("Lines of code", stats["LOC"]),
+        dotted_line("Lines of code", stats["LOC"], color=GREEN),
         ".",
         "-   LANGUAGES ------------------------------------------------------------",
     ]

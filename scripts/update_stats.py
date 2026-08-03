@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import urllib.request
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 USERNAME = os.environ.get("GH_USERNAME", "vikasranax")
 TOKEN = os.environ.get("GH_TOKEN")
@@ -116,54 +117,66 @@ def get_language_breakdown(repos):
     return breakdown
 
 
-SAFFRON = "#FF9933"
-GREEN = "#138808"
+def format_ist_datetime():
+    now = datetime.now(ZoneInfo("Asia/Kolkata"))
+    suffix = "th" if 11 <= (now.day % 100) <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(now.day % 10, "th")
+    return f"{now.day}{suffix} {now.strftime('%B %Y')} {now.strftime('%H:%M')} IST"
 
 
-def dotted_line(label, value, total_width=70, color=None):
-    """Formats a 'Label: ....... value' line matching the existing pre-block style.
-    If color is given, only the value is wrapped in a colored span (dot count
-    is still based on the plain value length, so alignment stays correct)."""
-    prefix = f".   {label}: "
-    dots_needed = max(3, total_width - len(prefix) - len(str(value)))
+def stat_line(prefix, label, value, total_width=66):
+    content = f"{label}: "
+    dots_needed = max(3, total_width - len(content) - len(str(value)))
     dots = "." * dots_needed
-    value_str = f'<span style="color:{color}">{value}</span>' if color else str(value)
-    return f"{prefix}{dots}  {value_str}"
+    return f"{prefix} {content}{dots}  {value}"
 
 
 def render_block(stats, languages):
     lines = [
-        "-   GITHUB STATS -------------------------------------------------------",
-        dotted_line("Repos", stats["REPOS"], color=SAFFRON),
-        dotted_line("Commits", stats["COMMITS"]),
-        dotted_line("Stars", stats["STARS"]),
-        dotted_line("Lines of code", stats["LOC"], color=GREEN),
-        ".",
-        "-   LANGUAGES ------------------------------------------------------------",
+        "# GITHUB STATS -------------------------------------------------------",
+        stat_line("!", "Repos", stats["REPOS"]),           # ! = orange/amber highlight
+        stat_line(" ", "Commits", stats["COMMITS"]),       # no prefix = default color
+        stat_line(" ", "Stars", stats["STARS"]),
+        stat_line("+", "Lines of code", stats["LOC"]),     # + = green
+        " ",
+        "# LANGUAGES ------------------------------------------------------------",
     ]
 
     if languages:
         for lang, pct in languages:
-            lines.append(dotted_line(lang, f"{pct:.1f}%"))
+            lines.append(stat_line(" ", lang, f"{pct:.1f}%"))
     else:
-        lines.append(".   (no data)")
+        lines.append("  (no data)")
 
-    lines.append(".")
-    lines.append(f".   last sync: {stats['UPDATED']}")
+    lines.append(" ")
+    lines.append(f"  last sync: {stats['UPDATED']}")
 
-    return "\n".join(lines)
+    return "```diff\n" + "\n".join(lines) + "\n```"
 
 
 def update_readme(block):
     with open(README_PATH, "r", encoding="utf-8") as f:
         content = f.read()
 
-    new_content = re.sub(
+    if "<!-- STATS:START -->" not in content or "<!-- STATS:END -->" not in content:
+        raise RuntimeError(
+            "STATS:START / STATS:END markers not found in README.md — "
+            "the script has nowhere to insert stats. Check that both "
+            "'<!-- STATS:START -->' and '<!-- STATS:END -->' exist exactly "
+            "as written, on their own, somewhere in README.md."
+        )
+
+    new_content, count = re.subn(
         r"(<!-- STATS:START -->)(.*?)(<!-- STATS:END -->)",
         lambda m: f"{m.group(1)}\n{block}\n{m.group(3)}",
         content,
         flags=re.DOTALL,
     )
+
+    if count == 0:
+        raise RuntimeError(
+            "Markers were found but regex substitution matched 0 times — "
+            "check marker formatting/ordering in README.md."
+        )
 
     with open(README_PATH, "w", encoding="utf-8") as f:
         f.write(new_content)
@@ -176,7 +189,7 @@ def main():
         "COMMITS": f"{get_total_commits():,}",
         "STARS": f"{sum(r.get('stargazers_count', 0) for r in repos):,}",
         "LOC": f"{get_total_loc(repos):,}",
-        "UPDATED": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        "UPDATED": format_ist_datetime(),
     }
     languages = get_language_breakdown(repos)
     block = render_block(stats, languages)

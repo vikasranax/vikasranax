@@ -19,28 +19,22 @@ VIKASRANAX  ---------------------------------------------------------------
 <!-- STATS:START -->
 ```diff
 # GITHUB STATS -------------------------------------------------------
-! Repos: .........................................................  10
-  Commits: .......................................................  54
-  Stars: .........................................................  10
-+ Lines of code: .............................................  21,549
+! Repos: ..................................  —
+  Commits: ................................  —
+  Stars: ..................................  —
++ Lines of code: ..........................  —
  
 # LANGUAGES ------------------------------------------------------------
-  TypeScript: .................................................  44.8%
-  JavaScript: .................................................  37.1%
-  Python: ......................................................  4.9%
-  CSS: .........................................................  4.8%
-  C++: .........................................................  4.4%
-  HTML: ........................................................  3.9%
-  Dockerfile: ..................................................  0.1%
+  (run the workflow to populate this)
  
-  last sync: 3rd August 2026 18:10 IST
+  last sync: never
 ```
 <!-- STATS:END -->
 </pre>
 
 <div align="center">
 <p align="center">
-<img width="47%" src="https://capsule-render.vercel.app/api?type=waving&color=0:FFFFFF,100:FF9933&height=60&section=footer"/><img width="36" height="36" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ashoka_Chakra.svg" alt="Ashoka Chakra"/><img width="47%" src="https://capsule-render.vercel.app/api?type=waving&color=0:138808,100:FFFFFF&height=60&section=footer"/>
+<img width="47%" src="https://capsule-render.vercel.app/api?type=waving&color=0:FFFFFF,100:FF9933&height=90&section=footer"/><img width="24" height="24" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ashoka_Chakra.svg" alt="Ashoka Chakra"/><img width="47%" src="https://capsule-render.vercel.app/api?type=waving&color=0:138808,100:FFFFFF&height=90&section=footer"/>
 </p>
 
 </div>

@@ -123,34 +123,34 @@ def format_ist_datetime():
     return f"{now.day}{suffix} {now.strftime('%B %Y')} {now.strftime('%H:%M')} IST"
 
 
-def stat_line(prefix, label, value, total_width=66):
-    content = f"{label}: "
-    dots_needed = max(3, total_width - len(content) - len(str(value)))
+def stat_line(label, value, total_width=70):
+    prefix = f".   {label}: "
+    dots_needed = max(3, total_width - len(prefix) - len(str(value)))
     dots = "." * dots_needed
-    return f"{prefix} {content}{dots}  {value}"
+    return f"{prefix}{dots}  {value}"
 
 
 def render_block(stats, languages):
     lines = [
-        "# GITHUB STATS -------------------------------------------------------",
-        stat_line("!", "Repos", stats["REPOS"]),           # ! = orange/amber highlight
-        stat_line(" ", "Commits", stats["COMMITS"]),       # no prefix = default color
-        stat_line(" ", "Stars", stats["STARS"]),
-        stat_line("+", "Lines of code", stats["LOC"]),     # + = green
-        " ",
-        "# LANGUAGES ------------------------------------------------------------",
+        "-   GITHUB STATS -------------------------------------------------------",
+        stat_line("Repos", stats["REPOS"]),
+        stat_line("Commits", stats["COMMITS"]),
+        stat_line("Stars", stats["STARS"]),
+        stat_line("Lines of code", stats["LOC"]),
+        ".",
+        "-   LANGUAGES ------------------------------------------------------------",
     ]
 
     if languages:
         for lang, pct in languages:
-            lines.append(stat_line(" ", lang, f"{pct:.1f}%"))
+            lines.append(stat_line(lang, f"{pct:.1f}%"))
     else:
-        lines.append("  (no data)")
+        lines.append(".   (no data)")
 
-    lines.append(" ")
-    lines.append(f"  last sync: {stats['UPDATED']}")
+    lines.append(".")
+    lines.append(f".   last sync: {stats['UPDATED']}")
 
-    return "```diff\n" + "\n".join(lines) + "\n```"
+    return "\n".join(lines)
 
 
 def update_readme(block):

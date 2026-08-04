@@ -3,44 +3,36 @@
 </p>
 
 <pre>
-VIKASRANAX  ---------------------------------------------------------------
+VIKASRANAX  ----------------------------------------------------------------
 .   OS: ................................Windows
 .   Languages.Computer: ................HTML,CSS,REACT,Docker
 .   Languages.Programming: .............Python,JavaScript,NodeJS,  
 .   Languages.Human: ...................हिदी,English,Русский,中國人,Bahasa Indonesia
 .
 
--   CONTACT ------------------------------------------------------------
+-   CONTACT ----------------------------------------------------------------
 .   Email: ..............................<a href="mailto:vikasranax@yahoo.com">vikasranax</a>
 .   LinkedIn: ...........................<a href="https://linkedin.com/in/vikasranax" target="_blank">vikasranax</a>
 .   Discord: ............................<a href="https://github.com/vikasranax" target="_blank">vikasranax</a>
 .   X: ..................................<a href="https://x.com/vikasranax" target="_blank">vikasranax</a>
 .
 <!-- STATS:START -->
-```diff
-# GITHUB STATS -------------------------------------------------------
-! Repos: .........................................................  10
-  Commits: .......................................................  56
-  Stars: .........................................................  10
-+ Lines of code: .............................................  21,549
- 
-# LANGUAGES ------------------------------------------------------------
-  TypeScript: .................................................  44.7%
-  JavaScript: .................................................  37.1%
-  Python: ......................................................  5.1%
-  CSS: .........................................................  4.8%
-  C++: .........................................................  4.4%
-  HTML: ........................................................  3.9%
-  Dockerfile: ..................................................  0.1%
- 
-  last sync: 4th August 2026 15:45 IST
-```
+-   GITHUB STATS -----------------------------------------------------------
+.   Repos: .............................  —
+.   Commits: ...........................  —
+.   Stars: .............................  —
+.   Lines of code: .....................  —
+.
+
+-   LANGUAGES ---------------------------------------------------------------
+.   (run the workflow to populate this)
+.
+.   last sync: never
 <!-- STATS:END -->
 </pre>
 
 <div align="center">
 <p align="center">
-<img width="47%" src="https://capsule-render.vercel.app/api?type=waving&color=0:FFFFFF,100:FF9933&height=90&section=footer"/><img width="24" height="24" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ashoka_Chakra.svg" alt="Ashoka Chakra"/><img width="47%" src="https://capsule-render.vercel.app/api?type=waving&color=0:138808,100:FFFFFF&height=90&section=footer"/>
+<img width="47%" src="https://capsule-render.vercel.app/api?type=waving&color=0:FFFFFF,100:FF9933&height=60&section=footer"/><img width="24" height="24" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ashoka_Chakra.svg" alt="Ashoka Chakra"/><img width="47%" src="https://capsule-render.vercel.app/api?type=waving&color=0:138808,100:FFFFFF&height=60&section=footer"/>
 </p>
-
 </div>

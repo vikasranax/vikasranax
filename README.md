@@ -13,11 +13,12 @@ VIKASRANAX  ----------------------------------------------------------------
 -   CONTACT ----------------------------------------------------------------
 .   Email: ..............................<a href="mailto:vikasranax@yahoo.com">vikasranax</a>
 .   LinkedIn: ...........................<a href="https://linkedin.com/in/vikasranax" target="_blank">vikasranax</a>
-.   Discord: ............................<a href="https://github.com/vikasranax" target="_blank">vikasranax</a>
+.   Discord: ............................<a href="https://discord.com/users/770971811252535337" target="_blank">vikasranax</a>
 .   X: ..................................<a href="https://x.com/vikasranax" target="_blank">vikasranax</a>
 .
 .   Google.Play..........................<a href="https://my.play/vikasranax" target="_blank">vikasranax</a>
-.   Google.Developer.....................<a href="https://me.developers.google.com/u/111963454988659944795" target="_blank">vikas rana</a>
+.   Google.Developer.....................<a href="https://g.dev/vikasranax" target="_blank">vikasranax</a>
+.   Google.Maps..........................<a href="https://maps.app.goo.gl/vG8hD3NbS3sQzzUV9" target="_blank">VRX</a>  
 .  
 <!-- STATS:START -->
 -   GITHUB STATS -------------------------------------------------------

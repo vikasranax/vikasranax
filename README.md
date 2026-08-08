@@ -8,7 +8,7 @@ VIKASRANAX  ----------------------------------------------------------------
 .   Languages.Computer: ................HTML,CSS,REACT,Docker
 .   Languages.Programming: .............Python,JavaScript,NodeJS,  
 .   Languages.Human: ...................हिदी,English,Русский,中國人,Bahasa Indonesia
-.
+.  
 
 -   CONTACT ----------------------------------------------------------------
 .   Email: ..............................<a href="mailto:vikasranax@yahoo.com">vikasranax</a>
@@ -16,6 +16,9 @@ VIKASRANAX  ----------------------------------------------------------------
 .   Discord: ............................<a href="https://github.com/vikasranax" target="_blank">vikasranax</a>
 .   X: ..................................<a href="https://x.com/vikasranax" target="_blank">vikasranax</a>
 .
+.   Google.Play..........................<a href="https://my.play/vikasranax" target="_blank">vikasranax</a>
+.   Google.Developer.....................<a href="https://me.developers.google.com/u/111963454988659944795" target="_blank">vikas rana</a>
+.  
 <!-- STATS:START -->
 -   GITHUB STATS -------------------------------------------------------
 .   Repos: .........................................................  11

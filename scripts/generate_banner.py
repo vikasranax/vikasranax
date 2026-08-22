@@ -68,7 +68,7 @@ def fetch_stats():
     for r in repos:
         stars += r.get("stargazers_count", 0)
         default = r.get("default_branch", "main")
-        total_commits += get_total_commits(r["name"])
+        total_commits += get_total_commits(r["name"], default)
 
         lang_url = r.get("languages_url")
         if lang_url:

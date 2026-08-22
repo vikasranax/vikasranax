@@ -1,9 +1,11 @@
 name: Update GitHub Banner
+# Runs every 6 hours (00:00, 06:00, 12:00, 18:00 UTC)
+# Banner timestamp is rendered in IST (UTC+5:30)
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # Every 6 hours
-  workflow_dispatch:        # Manual trigger
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
   push:
     branches: [main, master]
     paths:

@@ -1,1 +1,1 @@
-<img src="assets/github-banner-saltflats.svg" width="100%">
+<img src="assets/github-banner-mandala.svg" width="100%">

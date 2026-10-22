@@ -735,7 +735,7 @@ def render_panels(stats):
         left.append(T(60, yy, escape(label), 11.5, S["text"], 600))
         left.append(T(184, yy, escape(value), 11.5, S["sub"]))
     for y, title, body in [
-        (336, "Hobbies & Passions", "Reading · Exploring Places · Photography · Developer"),
+        (336, "Hobby", "Reading · Exploring Places · Photography · Developer"),
         (422, "Programming Languages", "HTML · CSS · JavaScript · TypeScript · Python · C · C++"),
         (508, "Tools & Frameworks", "React · Docker · Express · FastAPI · REST · GitHub · RAG"),
     ]:

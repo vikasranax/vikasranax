@@ -46,7 +46,7 @@ REQUEST_TIMEOUT = 30
 OUT_DIR = Path("assets")
 # ============================================================================
 
-W, H = 1200, 640
+W, H = 1200, 700
 SANS = "IBM Plex Sans, Segoe UI, Noto Sans, Noto Sans Devanagari, Arial, sans-serif"
 MONO = "IBM Plex Mono, SFMono-Regular, Consolas, Menlo, monospace"
 DISP = "Space Grotesk, Noto Sans Devanagari, Mukta, Segoe UI, sans-serif"
@@ -315,335 +315,365 @@ def fetch_stats():
 
 
 # ----------------------------------------------------------------------------
-# Artwork: "Kalinga dusk" - Jagannath temple (Puri) at the centre, flanked by a
-# Japanese pagoda + torii, Chinese Temple of Heaven, Lotus Temple (Delhi) and
-# the Kremlin (St Basil's + Spasskaya tower). Pure SVG, tiny CSS motion.
+# Artwork: monoline skyline of Asian landmarks (peacock-teal + marigold).
+# Left -> right: Japan pagoda | Korea Gwanghwamun | China Temple of Heaven |
+# Vietnam One Pillar Pagoda | India Gate | JAGANNATH (Puri) | Konark wheel &
+# jagamohana | Meenakshi gopuram | Kailash (Ellora) | Russia St Basil's
 # ----------------------------------------------------------------------------
-SX, SY = 630, 290          # sun / mandala centre (behind the Jagannath tower)
-HORIZON = 452
-GOLD = "#f6c777"
-RIM = "stroke='#ffd9a8' stroke-opacity='.32' stroke-width='.7'"
+BASE = 642                     # ground line y
+LW, DW = 1.5, 0.8              # main / detail stroke widths
+GOLD, CREAM, VERM, LOTUS, SUB = "#f3c262", "#f8edd8", "#ef6a3d", "#f291ac", "#8fb9bd"
+FILL, DARK = "#0a2f3b", "#061c26"
 
 CSS = """
 .tw{animation:tw 4s ease-in-out infinite}
-@keyframes tw{0%,100%{opacity:.2}50%{opacity:1}}
-.fl{animation:fl 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
-@keyframes fl{0%,100%{transform:scale(1,1)}50%{transform:scale(.86,1.14)}}
+@keyframes tw{0%,100%{opacity:.15}50%{opacity:.9}}
 .fw{animation:fw 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:0% 50%}
 @keyframes fw{0%,100%{transform:skewY(0deg) scaleX(1)}50%{transform:skewY(-7deg) scaleX(.9)}}
-.dr{animation:dr 50s ease-in-out infinite alternate}
-@keyframes dr{from{transform:translateX(-35px)}to{transform:translateX(35px)}}
-.rot{animation:rot 260s linear infinite;transform-origin:630px 290px}
-@keyframes rot{to{transform:rotate(360deg)}}
+.fl{animation:fl 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes fl{0%,100%{transform:scale(1,1)}50%{transform:scale(.86,1.14)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 """
 
 
-def _puff(gid, color, op):
-    return (f"<radialGradient id='{gid}' cx='0.5' cy='0.5' r='0.5'>"
-            f"<stop offset='0' stop-color='{color}' stop-opacity='{op}'/>"
-            f"<stop offset='0.55' stop-color='{color}' stop-opacity='{op*0.5:.2f}'/>"
-            f"<stop offset='1' stop-color='{color}' stop-opacity='0'/></radialGradient>")
+def R(x, y, w, h, fill=None):
+    f = f" fill='{fill}'" if fill else ""
+    return f"<rect x='{x:.1f}' y='{y:.1f}' width='{w:.1f}' height='{h:.1f}'{f}/>"
 
 
-def _ridge(seed, base, amp, step=22):
-    rnd = random.Random(seed)
-    ph = [rnd.uniform(0, 6.28) for _ in range(3)]
-    pts, x = [], -20
-    while x <= 1220:
-        n = (math.sin(x / 170 + ph[0]) * .5 + math.sin(x / 71 + ph[1]) * .3
-             + math.sin(x / 33 + ph[2]) * .15 + rnd.uniform(-.25, .25) * .3)
-        valley = .35 + .65 * min(1, abs(x - SX) / 260)
-        pts.append((x, base - amp * valley * (n * .5 + .5)))
-        x += step
-    return ("M -20 470 L " + " L ".join(f"{px:.0f} {py:.0f}" for px, py in pts) + " L 1220 470 Z")
+def Pa(d, fill=None, extra=""):
+    f = f" fill='{fill}'" if fill else ""
+    return f"<path d='{d}'{f} {extra}/>"
 
 
-def _r(x, y, w, h):
-    return f"<rect x='{x:.1f}' y='{y:.1f}' width='{w:.1f}' height='{h:.1f}'/>"
+def L(x1, y1, x2, y2):
+    return f"<line x1='{x1:.1f}' y1='{y1:.1f}' x2='{x2:.1f}' y2='{y2:.1f}' stroke-width='@D@' opacity='.6'/>"
 
 
-# ---- Jagannath temple, Puri (Kalinga / rekha deula) -------------------------
+def Dp(d):
+    return f"<path d='{d}' fill='none' stroke-width='@D@' opacity='.6'/>"
+
+
+def roof(w, y, h=12, tip=9, sag=3):
+    return Pa(f"M {-(w+tip):.1f} {y-5:.1f} Q {-w*.85:.1f} {y+sag:.1f} 0 {y+sag:.1f} "
+              f"Q {w*.85:.1f} {y+sag:.1f} {w+tip:.1f} {y-5:.1f} Q {w*.65:.1f} {y-5:.1f} {w*.28:.1f} {y-h:.1f} "
+              f"L {-w*.28:.1f} {y-h:.1f} Q {-w*.65:.1f} {y-5:.1f} {-(w+tip):.1f} {y-5:.1f} Z")
+
+
+def arch(x, w, h):
+    return Pa(f"M {x-w/2:.1f} 0 L {x-w/2:.1f} {-h+w/2:.1f} A {w/2:.1f} {w/2:.1f} 0 0 1 {x+w/2:.1f} {-h+w/2:.1f} "
+              f"L {x+w/2:.1f} 0 Z", fill=DARK)
+
+
+def onion(x, top, r):
+    return (Pa(f"M {x-r*.85:.1f} {top:.1f} Q {x-r*1.4:.1f} {top-r*.9:.1f} {x:.1f} {top-r*2.2:.1f} "
+               f"Q {x+r*1.4:.1f} {top-r*.9:.1f} {x+r*.85:.1f} {top:.1f} Z")
+            + f"<line x1='{x:.1f}' y1='{top-r*2.2:.1f}' x2='{x:.1f}' y2='{top-r*2.2-7:.1f}'/>"
+            + L(x - 2, top - r * 2.2 - 4.5, x + 2, top - r * 2.2 - 4.5)
+            + Dp(f"M {x-r*.6:.1f} {top-r*.2:.1f} Q {x-r*.2:.1f} {top-r*1.2:.1f} {x:.1f} {top-r*1.9:.1f}")
+            + Dp(f"M {x+r*.6:.1f} {top-r*.2:.1f} Q {x+r*.2:.1f} {top-r*1.2:.1f} {x:.1f} {top-r*1.9:.1f}"))
+
+
+# ---- Japan ------------------------------------------------------------------
+def m_pagoda():
+    o = [R(-34, -5, 68, 5), R(-28, -9, 56, 4)]
+    y = -9
+    for i in range(5):
+        w = 32 - i * 4.6
+        bw, bh = w * .62, 15 - i * .6
+        o += [R(-bw, y - bh, bw * 2, bh), L(-bw / 3, y - bh, -bw / 3, y), L(bw / 3, y - bh, bw / 3, y)]
+        y -= bh
+        o.append(roof(w, y, 12, 9))
+        y -= 7
+    o.append(f"<line x1='0' y1='{y}' x2='0' y2='{y-28}'/>")
+    for k in range(5):
+        o.append(f"<ellipse cx='0' cy='{y-5-k*4}' rx='{3.4-k*.45:.1f}' ry='1.1'/>")
+    return "".join(o)
+
+
+# ---- Korea: Gwanghwamun gate -----------------------------------------------
+def m_gwanghwamun():
+    o = [R(-62, -26, 124, 26), L(-62, -9, 62, -9), L(-62, -18, 62, -18),
+         arch(0, 22, 22), arch(-38, 16, 18), arch(38, 16, 18), R(-52, -44, 104, 18)]
+    o += [L(x, -44, x, -26) for x in range(-44, 45, 11)]
+    o.append(roof(58, -44, 14, 12))
+    o.append(R(-34, -72, 68, 14))
+    o += [L(x, -72, x, -58) for x in range(-27, 28, 9)]
+    o.append(roof(46, -72, 14, 11))
+    o += [f"<circle cx='{sx*20}' cy='-86' r='1.8'/>" for sx in (-1, 1)]
+    return "".join(o)
+
+
+# ---- China: Temple of Heaven -----------------------------------------------
+def m_heaven():
+    o = [R(-40, -6, 80, 6), R(-33, -12, 66, 6), R(-26, -18, 52, 6), R(-15, -32, 30, 14)]
+    o += [L(x, -32, x, -18) for x in (-8, 0, 8)]
+    y = -30
+    for w, h, wall in [(28, 14, 6), (21, 12, 6), (14, 11, 0)]:
+        o.append(Pa(f"M {-w-4} {y+3} Q {-w+3} {y} {-w*.55:.1f} {y-h*.35:.1f} L {-w*.22:.1f} {y-h} "
+                    f"L {w*.22:.1f} {y-h} L {w*.55:.1f} {y-h*.35:.1f} Q {w-3} {y} {w+4} {y+3} Z"))
+        y -= h
+        if wall:
+            o.append(R(-w * .6, y - wall, w * 1.2, wall))
+            y -= wall
+    o.append(f"<circle cx='0' cy='{y-3}' r='3'/>" + f"<line x1='0' y1='{y-6}' x2='0' y2='{y-13}'/>")
+    return "".join(o)
+
+
+# ---- Vietnam: One Pillar Pagoda ---------------------------------------------
+def m_onepillar():
+    o = [R(-4.5, -32, 9, 32), R(-22, -38, 44, 6), R(-14, -52, 28, 14),
+         arch(0, 9, 12).replace("M ", "M ", 1)]
+    o[-1] = f"<g transform='translate(0,-38)'>{arch(0, 9, 12)}</g>"
+    o += [roof(20, -52, 11, 9), roof(13, -63, 9, 7), f"<line x1='0' y1='-72' x2='0' y2='-80'/>"]
+    o.append(Dp("M -18 0 Q -9 -4 0 0 Q 9 -4 18 0"))
+    o.append(Pa("M -4.5 -5 Q -12 -9 -14 -15 Q -7 -12 -4.5 -5 Z", extra=f"stroke='{LOTUS}'"))
+    o.append(Pa("M 4.5 -5 Q 12 -9 14 -15 Q 7 -12 4.5 -5 Z", extra=f"stroke='{LOTUS}'"))
+    return "".join(o)
+
+
+# ---- India Gate -------------------------------------------------------------
+def m_indiagate():
+    o = [R(-44, -8, 88, 8), R(-38, -14, 76, 6), R(-30, -72, 60, 58)]
+    o += [L(-30, y, 30, y) for y in (-24, -34, -62)]
+    o.append(arch(0, 26, 40).replace("M ", "M ", 1))
+    o[-1] = f"<g transform='translate(0,-14)'>{arch(0, 26, 40)}</g>"
+    o += [R(-34, -80, 68, 8), R(-26, -86, 52, 6),
+          Pa("M -14 -86 Q 0 -104 14 -86 Z"), f"<line x1='0' y1='-98' x2='0' y2='-108'/>"]
+    o.append(Pa("M -5 -14 L -5 -19 L 5 -19 L 5 -14 Z", extra=f"stroke='{VERM}'"))
+    return "".join(o)
+
+
+# ---- Meenakshi Amman gopuram ------------------------------------------------
+def m_meenakshi():
+    o = [R(-38, -30, 76, 30), Pa("M -8 0 L -8 -18 L 0 -26 L 8 -18 L 8 0 Z", fill=DARK)]
+    y, n = -30, 8
+    for i in range(n):
+        w0, w1, h = 66 - i * 4.6, 66 - (i + 1) * 4.6, 11
+        o.append(Pa(f"M {-w0/2:.1f} {y} L {-w1/2:.1f} {y-h} L {w1/2:.1f} {y-h} L {w0/2:.1f} {y} Z"))
+        o.append(R(-(w0 + 5) / 2, y - 2.2, w0 + 5, 2.2))
+        o += [R(k * w1 / 3.2 - 1.8, y - h + 2.6, 3.6, 5, fill=DARK) for k in (-1, 0, 1)]
+        y -= h
+    wt = 66 - n * 4.6
+    hw = wt / 2 + 3
+    o.append(Pa(f"M {-hw:.1f} {y} L {-hw:.1f} {y-7} Q 0 {y-30} {hw:.1f} {y-7} L {hw:.1f} {y} Z"))
+    for k in range(-3, 4):
+        x = k * 4.6
+        yy = y - 7 - 11.5 * (1 - (x / hw) ** 2)
+        o.append(f"<ellipse cx='{x:.1f}' cy='{yy-3:.1f}' rx='1.7' ry='2.6'/>")
+    return "".join(o)
+
+
+# ---- Jagannath temple, Puri -------------------------------------------------
 TOWER = ("M -36 0 L 36 0 L 36 -10 L 33 -14 L 33 -58 Q 32 -104 26 -140 Q 19 -176 11 -200 L 11 -206 "
          "L -11 -206 L -11 -200 Q -19 -176 -26 -140 Q -32 -104 -33 -58 L -33 -14 L -36 -10 Z")
 
 
 def _tower_core():
-    return (f"<path d='{TOWER}'/><ellipse cx='0' cy='-210' rx='17' ry='5.2'/>"
-            "<ellipse cx='0' cy='-219' rx='7.5' ry='4'/>"
-            "<path d='M -3.2 -222 Q -6.5 -229 0 -236 Q 6.5 -229 3.2 -222 Z'/>")
+    return (Pa(TOWER) + "<ellipse cx='0' cy='-210' rx='17' ry='5.2'/><ellipse cx='0' cy='-219' rx='7.5' ry='4'/>"
+            + Pa("M -3.2 -222 Q -6.5 -229 0 -236 Q 6.5 -229 3.2 -222 Z"))
 
 
-def _pidha(cx, tiers_a, tiers_b, wall_w, wall_h, th=10):
-    """Stepped pyramidal roof (jagamohana / natamandira style)."""
-    out, y = [_r(cx - wall_w / 2, -wall_h, wall_w, wall_h)], -wall_h
-    for group in (tiers_a, tiers_b):
-        if group is tiers_b and tiers_b:
-            nk = tiers_b[0] * .8
-            out.append(_r(cx - nk / 2, y - 7, nk, 7))
+def _pidha(cx, ta, tb, ww, wh, th=10):
+    o, y = [R(cx - ww / 2, -wh, ww, wh)], -wh
+    for grp in (ta, tb):
+        if grp is tb and tb:
+            nk = tb[0] * .8
+            o.append(R(cx - nk / 2, y - 7, nk, 7))
             y -= 7
-        for w in group:
-            out.append(_r(cx - w / 2, y - th, w, th))
-            out.append(_r(cx - (w + 6) / 2, y - 3, w + 6, 3))
+        for w in grp:
+            o += [R(cx - w / 2, y - th, w, th), R(cx - (w + 6) / 2, y - 3, w + 6, 3)]
             y -= th
-    top = (tiers_b or tiers_a)[-1]
-    out.append(f"<ellipse cx='{cx}' cy='{y-2}' rx='{top*.42:.1f}' ry='3.4'/>"
-               f"<path d='M {cx-2.6} {y-4} Q {cx-5.5} {y-10} {cx} {y-17} Q {cx+5.5} {y-10} {cx+2.6} {y-4} Z'/>")
-    return "".join(out)
+    top = (tb or ta)[-1]
+    o.append(f"<ellipse cx='{cx}' cy='{y-2}' rx='{top*.42:.1f}' ry='3.4'/>")
+    o.append(Pa(f"M {cx-2.6} {y-4} Q {cx-5.5} {y-10} {cx} {y-17} Q {cx+5.5} {y-10} {cx+2.6} {y-4} Z"))
+    return "".join(o)
 
 
-def _jagannath(cx, by, s, fill, glow):
+def m_jagannath():
     ribs = "".join(
-        f"<path d='M {k*33:.1f} -14 Q {k*32:.1f} -104 {k*26:.1f} -140 Q {k*19:.1f} -176 {k*11:.1f} -200' "
-        f"fill='none' stroke='#43348a' stroke-width='.8' opacity='.75'/>"
-        for k in (-.75, -.5, -.25, 0, .25, .5, .75))
+        Dp(f"M {k*33:.1f} -14 Q {k*32:.1f} -104 {k*26:.1f} -140 Q {k*19:.1f} -176 {k*11:.1f} -200")
+        for k in (-.66, -.33, 0, .33, .66))
     bumps = "".join(
-        f"<ellipse cx='{sg*x}' cy='{y}' rx='4.4' ry='2.3'/>"
-        f"<line x1='{-x}' y1='{y}' x2='{x}' y2='{y}' stroke='#43348a' stroke-width='.8' opacity='.7'/>"
+        f"<ellipse cx='{sg*x}' cy='{y}' rx='4.4' ry='2.3'/>" + (L(-x, y, x, y) if sg == 1 else "")
         for y, x in [(-62, 33), (-100, 30), (-128, 26.5), (-154, 22), (-178, 16)] for sg in (-1, 1))
     cy = -258
     spokes = "".join(
-        f"<line x1='0' y1='{cy}' x2='{11*math.sin(math.radians(a)):.1f}' "
-        f"y2='{cy-11*math.cos(math.radians(a)):.1f}' stroke='{GOLD}' stroke-width='1.2'/>"
-        for a in range(0, 360, 45))
-    knobs = "".join(
-        f"<circle cx='{12.6*math.sin(math.radians(a)):.1f}' cy='{cy-12.6*math.cos(math.radians(a)):.1f}' r='1.4' fill='{GOLD}' stroke='none'/>"
-        for a in range(22, 360, 45))
-    chakra = (f"<rect x='-.9' y='-248' width='1.8' height='12'/>"
-              f"<circle cx='0' cy='{cy}' r='11' fill='none' stroke='{GOLD}' stroke-width='2.2'/>"
-              f"{spokes}{knobs}<circle cx='0' cy='{cy}' r='2.6' fill='{GOLD}' stroke='none'/>"
-              f"<rect x='-.5' y='-292' width='1' height='34' fill='{GOLD}' stroke='none'/>"
-              "<path class='fw' d='M .8 -292 Q 12 -287 25 -291 Q 18 -285 27 -279 Q 12 -283 .8 -280 Z' "
-              "fill='#ee5a36' stroke='none'/>")
-    doors = (f"<path d='M -6 -6 L -6 -22 Q 0 -33 6 -22 L 6 -6 Z' fill='{glow}' stroke='none'/>"
-             f"<path d='M -69 -6 L -69 -18 Q -64 -26 -59 -18 L -59 -6 Z' fill='{glow}' stroke='none'/>"
-             f"<path d='M -144 -6 L -144 -14 Q -140 -20 -136 -14 L -136 -6 Z' fill='{glow}' stroke='none'/>")
-    return (f"<g transform='translate({cx},{by}) scale({s})' fill='{fill}'>"
-            + _r(-174, -6, 250, 6)
-            + _pidha(-140, [56, 46, 36], [26, 18], 52, 20)
-            + _pidha(-64, [86, 74, 62], [48, 38, 28], 80, 28)
+        f"<line x1='0' y1='{cy}' x2='{11*math.sin(math.radians(a)):.1f}' y2='{cy-11*math.cos(math.radians(a)):.1f}' "
+        f"stroke='{CREAM}' stroke-width='1.1'/>" for a in range(0, 360, 45))
+    chakra = (R(-.9, -248, 1.8, 12)
+              + f"<circle cx='0' cy='{cy}' r='11' fill='{DARK}' stroke='{CREAM}' stroke-width='2'/>" + spokes
+              + f"<circle cx='0' cy='{cy}' r='2.6' fill='{CREAM}' stroke='none'/>"
+              + f"<line x1='0' y1='-291' x2='0' y2='{cy-11}' stroke='{CREAM}' stroke-width='1'/>"
+              + f"<path class='fw' d='M .8 -291 Q 12 -286 25 -290 Q 18 -284 27 -278 Q 12 -282 .8 -279 Z' "
+                f"fill='{VERM}' stroke='none'/>")
+    return (R(-110, -6, 186, 6) + _pidha(-64, [86, 74, 62], [48, 38, 28], 80, 28)
             + f"<g transform='translate(60,-6) scale(.3)'>{_tower_core()}</g>"
-            + _tower_core() + ribs + bumps + chakra + doors + "</g>")
+            + _tower_core() + ribs + bumps + chakra
+            + Pa("M -6 -6 L -6 -22 Q 0 -33 6 -22 L 6 -6 Z", fill=GOLD, extra="stroke='none'"))
 
 
-# ---- Japan: pagoda + torii ---------------------------------------------------
-def _pagoda(cx, by, s, fill):
-    parts, y = [], 0.0
-    for i in range(5):
-        w = 30 - i * 4.5
-        hb = 14 - i * .8
-        parts.append(_r(-w * .7, y - hb, w * 1.4, hb))
-        y -= hb
-        parts.append(
-            f"<path d='M {-(w+10):.1f} {y-5:.1f} Q {-w*.9:.1f} {y+3:.1f} 0 {y+3:.1f} "
-            f"Q {w*.9:.1f} {y+3:.1f} {w+10:.1f} {y-5:.1f} Q {w*.7:.1f} {y-6:.1f} {w*.3:.1f} {y-12:.1f} "
-            f"L {-w*.3:.1f} {y-12:.1f} Q {-w*.7:.1f} {y-6:.1f} {-(w+10):.1f} {y-5:.1f} Z'/>")
-        y -= 8
-    parts.append(_r(-.8, y - 16, 1.6, 18) + f"<circle cx='0' cy='{y-12:.1f}' r='2.2'/>")
-    return f"<g transform='translate({cx},{by}) scale({s})' fill='{fill}'>{''.join(parts)}</g>"
+# ---- Konark Sun Temple: wheel + jagamohana ----------------------------------
+def m_konark():
+    wx, wy, r = -34, -30, 25
+    beads = "".join(f"<circle cx='{wx+19*math.sin(math.radians(a*22.5)):.1f}' cy='{wy-19*math.cos(math.radians(a*22.5)):.1f}' "
+                    f"r='1' fill='{GOLD}' stroke='none'/>" for a in range(16))
+    spokes = "".join(
+        f"<line x1='{wx}' y1='{wy}' x2='{wx+r*math.sin(math.radians(a)):.1f}' y2='{wy-r*math.cos(math.radians(a)):.1f}'/>"
+        for a in range(0, 360, 45))
+    return (R(-66, -8, 132, 8) + R(-60, -14, 120, 6)
+            + f"<g transform='translate(22,-14)'>{_pidha(0, [60, 50, 40], [30, 22], 56, 22)}</g>"
+            + f"<circle cx='{wx}' cy='{wy}' r='{r}'/>" + f"<circle cx='{wx}' cy='{wy}' r='20' fill='none' stroke-width='@D@' opacity='.6'/>"
+            + spokes + beads + f"<circle cx='{wx}' cy='{wy}' r='4.5'/>")
 
 
-def _torii(cx, by, s, fill):
-    return (f"<g transform='translate({cx},{by}) scale({s})' fill='{fill}'>"
-            + _r(-19, -52, 4.8, 52) + _r(14.2, -52, 4.8, 52) + _r(-22, -40, 44, 3.4)
-            + "<path d='M -33 -64 Q -22 -55 0 -55 Q 22 -55 33 -64 L 35 -69 Q 22 -60 0 -60 Q -22 -60 -35 -69 Z'/>"
-            + _r(-4, -60, 8, 8) + "</g>")
+# ---- Kailash temple, Ellora --------------------------------------------------
+def m_kailash():
+    cx, y = 24, -12
+    o = [R(-72, -12, 144, 12), L(-72, -6, 72, -6), R(cx - 27, y - 22, 54, 22)]
+    y -= 22
+    for w in (50, 40, 30):
+        o += [R(cx - w / 2, y - 11, w, 11), R(cx - (w + 5) / 2, y - 2.4, w + 5, 2.4)]
+        o += [Pa(f"M {cx+sx*(w/2-5)-3:.1f} {y-11} A 3 3 0 0 1 {cx+sx*(w/2-5)+3:.1f} {y-11}") for sx in (-1, 1)]
+        y -= 11
+    o += [R(cx - 8, y - 8, 16, 8)]
+    y -= 8
+    o += [Pa(f"M {cx-10} {y} Q {cx} {y-22} {cx+10} {y} Z"),
+          f"<line x1='{cx}' y1='{y-20}' x2='{cx}' y2='{y-30}'/>", f"<circle cx='{cx}' cy='{y-31}' r='1.6'/>"]
+    o += [R(-58, -46, 56, 34)] + [L(x, -46, x, -12) for x in range(-52, -7, 8)]
+    o += [R(-62, -52, 64, 6)] + [Pa(f"M {x-4} -52 Q {x} -62 {x+4} -52 Z") for x in (-50, -30, -10)]
+    o += [R(-69.5, -72, 5, 60), R(-72, -76, 10, 4), f"<circle cx='-67' cy='-79' r='2.2'/>"]
+    return "".join(o)
 
 
-# ---- China: Temple of Heaven -------------------------------------------------
-def _temple_heaven(cx, by, s, fill):
-    g = [_r(-46, -6, 92, 6), _r(-38, -12, 76, 6), _r(-30, -18, 60, 6), _r(-17, -32, 34, 14)]
-    y = -30
-    for w, h, wall in [(31, 14, 6), (24, 12, 6), (17, 11, 0)]:
-        g.append(f"<path d='M {-w-4} {y+3} Q {-w+3} {y} {-w*.55:.1f} {y-h*.35:.1f} L {-w*.22:.1f} {y-h} "
-                 f"L {w*.22:.1f} {y-h} L {w*.55:.1f} {y-h*.35:.1f} Q {w-3} {y} {w+4} {y+3} Z'/>")
-        y -= h
-        if wall:
-            g.append(_r(-w * .6, y - wall, w * 1.2, wall))
-            y -= wall
-    g.append(f"<circle cx='0' cy='{y-3}' r='3.2'/>" + _r(-.7, y - 12, 1.4, 9))
-    return f"<g transform='translate({cx},{by}) scale({s})' fill='{fill}'>{''.join(g)}</g>"
+# ---- Russia: St Basil's -------------------------------------------------------
+def m_basil():
+    o = [R(-56, -16, 112, 16)]
+    o += [Dp(f"M {x-3} -2 L {x-3} -8 A 3 3 0 0 1 {x+3} -8 L {x+3} -2") for x in range(-48, 49, 12)]
+    o.append(Pa("M -10 -16 L -10 -52 L -5 -92 L 0 -106 L 5 -92 L 10 -52 L 10 -16 Z"))
+    o += [L(-3.3, -20, -2.2, -92), L(3.3, -20, 2.2, -92)]
+    o.append(onion(0, -104, 6))
+    for x, h, r in [(-32, 32, 9.5), (32, 32, 9.5), (-17, 24, 8.5), (17, 24, 8.5), (-46, 18, 8), (46, 18, 8)]:
+        o += [R(x - 4.2, -16 - h, 8.4, h), onion(x, -16 - h, r)]
+    return "".join(o)
 
 
-# ---- India: Lotus Temple, Delhi ---------------------------------------------
-def _lotus_temple(cx, by, s, fill):
-    def petal(x0, w, h, lean):
-        return (f"<path d='M {x0-w} 0 C {x0-w*.9+lean*.3} {-h*.5} {x0+lean*.6-w*.2} {-h*.9} {x0+lean} {-h} "
-                f"C {x0+lean*.6+w*.2} {-h*.9} {x0+w*.9+lean*.3} {-h*.5} {x0+w} 0 Z'/>")
-    ps = [(-12, 14, 66, 4), (12, 14, 66, -4), (0, 15, 74, 0),
-          (-28, 14, 52, 6), (28, 14, 52, -6),
-          (-44, 13, 34, 4), (44, 13, 34, -4),
-          (-18, 13, 34, -3), (18, 13, 34, 3), (0, 14, 40, 0)]
-    g = [petal(*p) for p in ps]
-    g.append(_r(-58, -3, 116, 3))
-    return f"<g transform='translate({cx},{by}) scale({s})' fill='{fill}'>{''.join(g)}</g>"
+# ---- little spacer icons -----------------------------------------------------
+def sp_lotus():
+    petals = "".join(f"<path transform='translate(0,-12) rotate({a})' d='M 0 0 Q -5 -8 0 -16 Q 5 -8 0 0 Z'/>"
+                     for a in (-48, -24, 24, 48, 0))
+    return (f"<g stroke='{LOTUS}'>" + f"<line x1='0' y1='0' x2='0' y2='-12'/>"
+            + "<ellipse cx='0' cy='0' rx='12' ry='2.4'/>" + petals + "</g>")
 
 
-# ---- Russia: St Basil's + Spasskaya tower & wall ----------------------------
-def _onion(x, top, r):
-    return (f"<path d='M {x-r*.85:.1f} {top:.1f} Q {x-r*1.4:.1f} {top-r*.9:.1f} {x:.1f} {top-r*2.2:.1f} "
-            f"Q {x+r*1.4:.1f} {top-r*.9:.1f} {x+r*.85:.1f} {top:.1f} Z'/>"
-            f"<rect x='{x-.5:.1f}' y='{top-r*2.2-6:.1f}' width='1' height='6.5'/>"
-            f"<rect x='{x-2:.1f}' y='{top-r*2.2-4.5:.1f}' width='4' height='1'/>")
+def sp_lantern():
+    return (f"<g stroke='{VERM}' transform='translate(-6,0)'><line x1='0' y1='0' x2='0' y2='-46'/><line x1='0' y1='-46' x2='10' y2='-46'/>"
+            "<line x1='10' y1='-46' x2='10' y2='-40'/><ellipse cx='10' cy='-30' rx='7.5' ry='10'/>"
+            "<rect x='6' y='-41' width='8' height='2.4'/><rect x='6' y='-21' width='8' height='2.4'/>"
+            "<line x1='10' y1='-19' x2='10' y2='-11'/><circle cx='10' cy='-9.5' r='1.5'/></g>")
 
 
-def _basil(cx, by, s, fill):
-    g = [_r(-54, -16, 108, 16)]
-    # tall tent-roofed central tower
-    g.append("<path d='M -10 -16 L -10 -52 L -5 -92 L 0 -104 L 5 -92 L 10 -52 L 10 -16 Z'/>")
-    g.append(_onion(0, -102, 6))
-    for x, h, r in [(-46, 18, 8), (46, 18, 8), (-32, 32, 9.5), (32, 32, 9.5), (-17, 24, 8.5), (17, 24, 8.5)]:
-        g.append(_r(x - 4.2, -16 - h, 8.4, h))
-        g.append(_onion(x, -16 - h, r))
-    return f"<g transform='translate({cx},{by}) scale({s})' fill='{fill}'>{''.join(g)}</g>"
+def sp_tree():
+    return "<line x1='0' y1='0' x2='0' y2='-16'/><circle cx='0' cy='-25' r='9.5'/>"
 
 
-def _kremlin_tower(cx, by, s, fill):
-    star = " ".join(f"{4.6*(1 if i%2==0 else .42)*math.sin(math.radians(i*36)):.2f},"
-                    f"{-110-4.6*(1 if i%2==0 else .42)*math.cos(math.radians(i*36)):.2f}" for i in range(10))
-    g = [_r(-9, -52, 18, 52), _r(-12, -57, 24, 5)]
-    g += [_r(-11 + i * 5.6, -62, 3.4, 5) for i in range(5)]
-    g += [_r(-7, -72, 14, 11), "<path d='M -9 -72 L 0 -106 L 9 -72 Z'/>", _r(-.6, -110, 1.2, 8)]
-    g.append(f"<polygon points='{star}' fill='#ff4d3d' stroke='none'/>")
-    return f"<g transform='translate({cx},{by}) scale({s})' fill='{fill}'>{''.join(g)}</g>"
+def sp_diya():
+    return (f"<path d='M -9 -8 Q 0 2 9 -8 Z'/><path class='fl' d='M 0 -9 Q -4.2 -16 0 -25 Q 4.2 -16 0 -9 Z' "
+            f"fill='{VERM}' stroke='none'/>")
 
 
-def _kremlin_wall(x0, x1, by, fill):
-    h = 12
-    g = [_r(x0, by - h, x1 - x0, h)]
-    x = x0
-    while x < x1 - 4:
-        g.append(_r(x, by - h - 4, 4, 4))
-        x += 7
-    return f"<g fill='{fill}'>{''.join(g)}</g>"
+SEQ = [("m", m_pagoda, -34, 34, 1.15), ("s", sp_lantern, 30, 0),
+       ("m", m_gwanghwamun, -62, 62, .85), ("s", sp_tree, 20, 0),
+       ("m", m_heaven, -40, 40, 1.1), ("s", sp_lotus, 24, 0),
+       ("m", m_onepillar, -22, 22, 1.2), ("s", sp_diya, 22, 0),
+       ("m", m_indiagate, -44, 44, 1.1), ("s", None, 12, 0),
+       ("m", m_jagannath, -110, 76, 1.05), ("s", None, 12, 0),
+       ("m", m_konark, -66, 66, .9), ("s", sp_lotus, 24, 0),
+       ("m", m_meenakshi, -38, 38, 1.25), ("s", sp_tree, 20, 0),
+       ("m", m_kailash, -72, 72, .82), ("s", sp_lantern, 30, 0),
+       ("m", m_basil, -56, 56, .9)]
 
 
-def skyline():
-    base = 447
-    back, mid, front = "#4a3a8c", "#352a78", "#0b0620"
-    return (
-        f"<g {RIM}>"
-        + _kremlin_wall(772, 860, base, back)
-        + _temple_heaven(382, base, .78, back)
-        + _pagoda(434, base, .92, "#3f3280")
-        + _kremlin_tower(786, base, .62, mid)
-        + _basil(822, base, .56, mid)
-        + _lotus_temple(736, base, .76, "#6a5aa8")
-        + _jagannath(636, base + 3, .9, front, "#ffcf8a")
-        + "</g>")
+def skyline(avail=1110):
+    tot = sum((e[3] - e[2]) * e[4] if e[0] == "m" else e[2] for e in SEQ)
+    g = min(1.0, avail / tot)
+    x = (W - tot * g) / 2
+    out, jx = [], W / 2
+    for e in SEQ:
+        if e[0] == "s":
+            fn, wd = e[1], e[2] * g
+            if fn:
+                out.append(f"<g transform='translate({x+wd/2:.1f},{BASE}) scale({g:.3f})' fill='{FILL}' "
+                           f"stroke='{GOLD}' stroke-width='{LW/g:.2f}' stroke-linecap='round' "
+                           f"stroke-linejoin='round'>{fn()}</g>")
+            x += wd
+        else:
+            _, fn, xl, xr, sc = e
+            s = sc * g
+            cx = x - xl * s
+            if fn is m_jagannath:
+                jx = cx
+            body = fn().replace("@D@", f"{DW/s:.3f}")
+            out.append(f"<g transform='translate({cx:.1f},{BASE}) scale({s:.3f})' fill='{FILL}' stroke='{GOLD}' "
+                       f"stroke-width='{LW/s:.2f}' stroke-linecap='round' stroke-linejoin='round'>{body}</g>")
+            x += (xr - xl) * s
+    return "".join(out).replace("@D@", f"{DW:.2f}"), jx
+
+
+def seigaiha(y0, y1, x0, x1, r=12):
+    d, row, y = [], 0, y0 + r
+    while y <= y1 + r:
+        x = x0 - r + (r if row % 2 else 0)
+        while x <= x1 + r:
+            for rr in (r, r * .62):
+                d.append(f"M {x-rr:.1f} {y:.1f} A {rr:.1f} {rr:.1f} 0 0 1 {x+rr:.1f} {y:.1f}")
+            x += 2 * r
+        y += r * .5
+        row += 1
+    return " ".join(d)
 
 
 def background():
-    rnd = random.Random(108)
-    defs = [
-        "<linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'>"
-        "<stop offset='0' stop-color='#040922'/><stop offset='.22' stop-color='#0a1c48'/>"
-        "<stop offset='.42' stop-color='#33297a'/><stop offset='.56' stop-color='#8a3a86'/>"
-        "<stop offset='.64' stop-color='#d94f73'/><stop offset='.69' stop-color='#ff8f50'/>"
-        "<stop offset='.706' stop-color='#ffc66e'/><stop offset='1' stop-color='#ffc66e'/></linearGradient>",
-        "<radialGradient id='sun' cx='.5' cy='.5' r='.5'><stop offset='0' stop-color='#fff6dc'/>"
-        "<stop offset='.6' stop-color='#ffd07a'/><stop offset='1' stop-color='#ff9a52'/></radialGradient>",
-        "<linearGradient id='water' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#4a2160'/>"
-        "<stop offset='.25' stop-color='#133650'/><stop offset='1' stop-color='#040d1a'/></linearGradient>",
-        "<radialGradient id='vig' cx='.5' cy='.5' r='.75'><stop offset='.6' stop-color='#03050f' stop-opacity='0'/>"
-        "<stop offset='1' stop-color='#03050f' stop-opacity='.55'/></radialGradient>",
-        "<linearGradient id='lot' x1='0' y1='1' x2='0' y2='0'><stop offset='0' stop-color='#d4507c'/>"
-        "<stop offset='1' stop-color='#ffc9d8'/></linearGradient>",
-        _puff("dglow", "#ffb860", .55), _puff("sglow", "#ffcf94", .75),
-        _puff("mist", "#ffb08a", .5), _puff("mist2", "#d79ad0", .4),
-    ]
-    b = [f"<rect width='{W}' height='{H}' fill='url(#sky)'/>"]
-
-    for _ in range(80):
-        x, y = rnd.uniform(15, 1185), rnd.uniform(12, 300)
-        if rnd.random() < .5:
-            y = rnd.uniform(12, 170)
-        b.append(f"<circle class='tw' cx='{x:.0f}' cy='{y:.0f}' r='{rnd.uniform(.5, 1.4):.1f}' fill='#fff7e6' "
-                 f"style='animation-delay:{rnd.uniform(0, 4):.1f}s;animation-duration:{rnd.uniform(3, 6):.1f}s'/>")
-
-    b.append(f"<ellipse cx='{SX}' cy='{SY+20}' rx='430' ry='260' fill='url(#sglow)'/>")
-    b.append(f"<circle cx='{SX}' cy='{SY}' r='168' fill='none' stroke='{GOLD}' stroke-width='.6' opacity='.3'/>")
-    b.append(f"<circle cx='{SX}' cy='{SY}' r='122' fill='none' stroke='{GOLD}' stroke-width='1.2' "
-             f"stroke-dasharray='.1 7' stroke-linecap='round' opacity='.7'/>")
-    b.append(f"<circle cx='{SX}' cy='{SY}' r='108' fill='none' stroke='{GOLD}' stroke-width='.8' opacity='.5'/>")
-    petals = "".join(
-        f"<path transform='rotate({i*15} {SX} {SY})' d='M {SX} {SY-110} Q {SX+13} {SY-134} {SX} {SY-158} "
-        f"Q {SX-13} {SY-134} {SX} {SY-110} Z' fill='none' stroke='{GOLD}' stroke-width='.7' opacity='.42'/>"
-        for i in range(24))
-    ticks = "".join(
-        f"<line x1='{SX+171*math.sin(math.radians(i*5)):.1f}' y1='{SY-171*math.cos(math.radians(i*5)):.1f}' "
-        f"x2='{SX+(177 if i%3==0 else 174)*math.sin(math.radians(i*5)):.1f}' "
-        f"y2='{SY-(177 if i%3==0 else 174)*math.cos(math.radians(i*5)):.1f}' stroke='{GOLD}' stroke-width='.6' opacity='.4'/>"
-        for i in range(72))
-    b.append(f"<g class='rot'>{petals}{ticks}</g>")
-    b.append(f"<circle cx='{SX}' cy='{SY}' r='92' fill='url(#sun)'/>")
-
-    b.append("<g class='dr'><ellipse cx='320' cy='345' rx='300' ry='20' fill='url(#mist2)'/>"
-             "<ellipse cx='900' cy='352' rx='320' ry='20' fill='url(#mist2)'/></g>")
-    layers = [(1, 362, 62, "#b0629a", .55), (2, 386, 58, "#7a4a92", .8),
-              (3, 410, 46, "#463a86", .92), (4, 432, 30, "#25255f", 1)]
-    for i, (seed, base, amp, col, op) in enumerate(layers):
-        b.append(f"<path d='{_ridge(seed*7, base, amp)}' fill='{col}' opacity='{op}'/>")
-        b.append(f"<g class='dr' style='animation-duration:{40+i*9}s'>"
-                 f"<ellipse cx='{300+i*220}' cy='{base+14}' rx='340' ry='15' fill='url(#mist)'/></g>")
-
-    b.append(f"<rect y='441' width='{W}' height='14' fill='#1a1440'/>")           # far shore
-    sk = skyline()
-    b.append(sk)
-    b.append("<path d='M 500 458 Q 570 442 640 440 Q 720 442 770 458 Z' fill='#0b0620'/>")
-
-    b.append(f"<rect y='{HORIZON}' width='{W}' height='{H-HORIZON}' fill='url(#water)'/>")
-    b.append(f"<rect y='{HORIZON-1}' width='{W}' height='1.4' fill='{GOLD}' opacity='.5'/>")
-    b.append(f"<g transform='translate(0,{2*HORIZON}) scale(1,-1)' opacity='.17'>{sk}</g>")   # reflection
-    for i in range(15):
-        w = 96 - i * 5.2 + rnd.uniform(-6, 6)
-        b.append(f"<rect x='{SX-w/2:.0f}' y='{462+i*11.5:.0f}' width='{max(w,8):.0f}' height='2.2' rx='1.1' "
-                 f"fill='#ffcf8a' opacity='{.7-i*.042:.2f}'/>")
-    for _ in range(26):
-        x, y, w = rnd.uniform(0, 1200), rnd.uniform(470, 630), rnd.uniform(30, 110)
-        b.append(f"<rect x='{x:.0f}' y='{y:.0f}' width='{w:.0f}' height='1' fill='#b79ad6' opacity='.16'/>")
-
-    b.append(f"<g {RIM}>{_torii(402, 494, .9, '#2c1c52')}</g>")
-    b.append(f"<g transform='translate(0,{2*494}) scale(1,-1)' opacity='.2'>{_torii(402, 494, .9, '#2c1c52')}</g>")
-    b.append("<ellipse cx='402' cy='496' rx='34' ry='3.5' fill='none' stroke='#b79ad6' stroke-width='.8' opacity='.35'/>")
-
-    for x, y, s in [(500, 520, 1), (556, 576, 1.25), (610, 508, .85), (672, 552, 1.1),
-                    (730, 520, .95), (786, 592, 1.3), (636, 612, .9), (462, 590, .8)]:
-        b.append(_diya(x, y, s))
-    b.append(_lotus(520, 610, 1.0))
-    b.append(_lotus(740, 600, .85))
-
-    birds = "".join(f"<path d='M {x} {y} q 6 -7 12 0 q 6 -7 12 0'/>"
-                    for x, y in [(450, 150), (478, 134), (506, 158), (536, 142), (492, 176)])
-    b.append(f"<g class='dr' stroke='#f9dcb4' stroke-width='1.6' fill='none' stroke-linecap='round' opacity='.7'>{birds}</g>")
-
-    b.append(f"<rect width='{W}' height='{H}' fill='url(#vig)'/>")
-    b.append(f"<rect x='12' y='12' width='{W-24}' height='{H-24}' rx='12' fill='none' stroke='{GOLD}' "
-             f"stroke-width='.8' opacity='.4'/>")
-    return "".join(defs), "".join(b)
-
-
-def _lotus(x, y, s):
-    petals = "".join(
-        f"<path transform='rotate({a})' d='M 0 0 Q -7 -9 0 -21 Q 7 -9 0 0 Z' fill='url(#lot)'/>"
-        for a in (-62, -38, -16, 16, 38, 62, 0))
-    return (f"<g transform='translate({x},{y}) scale({s})'>"
-            "<ellipse cx='0' cy='1' rx='26' ry='5' fill='#0f3047' opacity='.9'/>" + petals +
-            "<circle cx='0' cy='-4' r='2.4' fill='#ffd27a'/></g>")
-
-
-def _diya(x, y, s):
-    return (f"<g transform='translate({x},{y}) scale({s})'>"
-            "<circle cx='0' cy='-6' r='22' fill='url(#dglow)'/>"
-            "<path d='M -8 -2 Q 0 8 8 -2 Z' fill='#b5603a'/><ellipse cx='0' cy='-2' rx='8' ry='1.8' fill='#d98a54'/>"
-            "<path class='fl' d='M 0 -3 Q -3.4 -8 0 -15 Q 3.4 -8 0 -3 Z' fill='#ffd88a'/></g>")
-
+    rnd = random.Random(7)
+    sky, jx = skyline()
+    defs = (
+        "<linearGradient id='bg' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#04141d'/>"
+        "<stop offset='.55' stop-color='#0a2d3a'/><stop offset='1' stop-color='#0e3f4a'/></linearGradient>"
+        "<radialGradient id='sun' cx='.5' cy='.5' r='.5'><stop offset='0' stop-color='#1f7078' stop-opacity='.75'/>"
+        "<stop offset='.6' stop-color='#14505a' stop-opacity='.35'/><stop offset='1' stop-color='#14505a' stop-opacity='0'/></radialGradient>"
+        "<linearGradient id='gl' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='#f3c262' stop-opacity='0'/>"
+        "<stop offset='.15' stop-color='#f3c262' stop-opacity='.9'/><stop offset='.85' stop-color='#f3c262' stop-opacity='.9'/>"
+        "<stop offset='1' stop-color='#f3c262' stop-opacity='0'/></linearGradient>"
+        "<radialGradient id='sh' cx='.5' cy='.5' r='.5'><stop offset='0' stop-color='#000' stop-opacity='.55'/>"
+        "<stop offset='1' stop-color='#000' stop-opacity='0'/></radialGradient>"
+        f"<clipPath id='band'><rect x='0' y='{BASE+1}' width='{W}' height='{H-BASE}'/></clipPath>")
+    b = [f"<rect width='{W}' height='{H}' fill='url(#bg)'/>"]
+    for _ in range(46):
+        b.append(f"<circle class='tw' cx='{rnd.uniform(10,1190):.0f}' cy='{rnd.uniform(10,330):.0f}' "
+                 f"r='{rnd.uniform(.5,1.3):.1f}' fill='{CREAM}' "
+                 f"style='animation-delay:{rnd.uniform(0,4):.1f}s;animation-duration:{rnd.uniform(3,6):.1f}s'/>")
+    cy = BASE - 118
+    b.append(f"<circle cx='{jx:.0f}' cy='{cy}' r='215' fill='url(#sun)'/>")
+    for rr, op, dash in [(112, .5, ""), (140, .3, ""), (168, .35, "1 7")]:
+        da = f"stroke-dasharray='{dash}' stroke-linecap='round'" if dash else ""
+        b.append(f"<circle cx='{jx:.0f}' cy='{cy}' r='{rr}' fill='none' stroke='{GOLD}' stroke-width='.8' "
+                 f"opacity='{op}' {da}/>")
+    b.append(f"<g stroke='{GOLD}' stroke-width='1.2' fill='none' stroke-linecap='round' opacity='.45'>"
+             + "".join(f"<path d='M {x} {y} q 6 -7 12 0 q 6 -7 12 0'/>"
+                       for x, y in [(jx+70, 330), (jx+98, 316), (jx+124, 338)]) + "</g>")
+    b.append(f"<rect y='{BASE}' width='{W}' height='{H-BASE}' fill='#0b3540'/>")
+    b.append(f"<path clip-path='url(#band)' d='{seigaiha(BASE, H, 0, W)}' fill='none' stroke='{GOLD}' "
+             f"stroke-width='.7' opacity='.16'/>")
+    b.append(f"<ellipse cx='{W/2}' cy='{BASE+3}' rx='560' ry='7' fill='url(#sh)'/>")
+    b.append(sky)
+    b.append(f"<rect x='30' y='{BASE-.6}' width='{W-60}' height='1.4' fill='url(#gl)'/>")
+    return defs, "".join(b)
 
 
 # ----------------------------------------------------------------------------
-# Panels
+# Text blocks (no panels - just clean type on the background)
 # ----------------------------------------------------------------------------
-S = {"head": "#fff6e8", "text": "#f0e7f5", "sub": "#cbbcdb", "gold": GOLD}
+S = {"head": CREAM, "text": "#e4eee8", "sub": SUB, "gold": GOLD}
 
 
 def T(x, y, s, size=12, fill=None, weight=400, family=SANS, anchor="start", extra=""):
@@ -652,41 +682,37 @@ def T(x, y, s, size=12, fill=None, weight=400, family=SANS, anchor="start", extr
 
 
 def heading(x, y, title, w):
-    return (T(x, y, escape(title), 13, S["gold"], 600, SANS, extra="letter-spacing='.6'")
-            + f"<rect x='{x}' y='{y+9}' width='{w}' height='1' fill='{S['gold']}' opacity='.35'/>")
+    return (T(x, y, escape(title.upper()), 10.5, GOLD, 600, SANS, extra="letter-spacing='1.4'")
+            + f"<rect x='{x}' y='{y+8}' width='{w}' height='1' fill='{GOLD}' opacity='.35'/>")
 
 
-def stat_card(x, y, value, label):
-    fs = 21 if len(value) <= 6 else 17
-    return (f"<rect x='{x}' y='{y}' width='130' height='60' rx='12' fill='#ffffff' fill-opacity='.07' "
-            f"stroke='{S['gold']}' stroke-opacity='.35' stroke-width='.8'/>"
-            + T(x + 65, y + 28, value, fs, S["head"], 500, MONO, "middle")
-            + T(x + 65, y + 46, escape(label), 9.5, S["sub"], 400, SANS, "middle"))
+def stat(x, y, value, label):
+    return (T(x, y, value, 30 if len(value) <= 6 else 25, CREAM, 500, MONO)
+            + T(x, y + 20, escape(label), 10.5, SUB))
 
 
 def lang_chart(languages, x0, y0, w):
-    out = [f"<clipPath id='lbar'><rect x='{x0}' y='{y0}' width='{w}' height='10' rx='5'/></clipPath>"]
+    out = [f"<clipPath id='lbar'><rect x='{x0}' y='{y0}' width='{w}' height='8' rx='4'/></clipPath>",
+           f"<rect x='{x0}' y='{y0}' width='{w}' height='8' rx='4' fill='#ffffff' opacity='.08'/>"]
     x, segs = x0, []
     for lang, _, pct in languages:
         sw = w * pct / 100
-        segs.append(f"<rect x='{x:.1f}' y='{y0}' width='{sw+.5:.1f}' height='10' "
-                    f"fill='{LANG_COLORS.get(lang, '#9a8aa8')}'/>")
+        segs.append(f"<rect x='{x:.1f}' y='{y0}' width='{sw+.5:.1f}' height='8' fill='{LANG_COLORS.get(lang, '#9a8aa8')}'/>")
         x += sw
-    out.append(f"<rect x='{x0}' y='{y0}' width='{w}' height='10' rx='5' fill='#ffffff' opacity='.1'/>")
     out.append(f"<g clip-path='url(#lbar)'>{''.join(segs)}</g>")
     for i, (lang, n, pct) in enumerate(languages):
         cy = y0 + 32 + i * 24
-        out.append(f"<circle cx='{x0+6}' cy='{cy-4}' r='4.5' fill='{LANG_COLORS.get(lang, '#9a8aa8')}'/>")
-        out.append(T(x0 + 20, cy, escape(lang), 12, S["text"]))
-        out.append(T(x0 + w - 62, cy, fmt(n), 11, S["sub"], 400, MONO, "end"))
-        out.append(T(x0 + w, cy, f"{pct:.1f}%", 11, S["head"], 500, MONO, "end"))
+        out += [f"<circle cx='{x0+5}' cy='{cy-4}' r='4' fill='{LANG_COLORS.get(lang, '#9a8aa8')}'/>",
+                T(x0 + 18, cy, escape(lang), 12, S["text"]),
+                T(x0 + w - 56, cy, fmt(n), 11, SUB, 400, MONO, "end"),
+                T(x0 + w, cy, f"{pct:.1f}%", 11, CREAM, 500, MONO, "end")]
     return "".join(out)
 
 
 def year_chart(per_year, x0, base_y, w, h):
     years = sorted(per_year)[-MAX_YEARS_SHOWN:]
     if not years:
-        return T(x0, base_y - 20, "per-year data needs a token", 11, S["sub"])
+        return T(x0, base_y - 20, "per-year data needs a token", 11, SUB)
     peak = max(per_year[y] for y in years) or 1
     gap = 8
     bw = min(30.0, (w - gap * (len(years) - 1)) / len(years))
@@ -695,75 +721,51 @@ def year_chart(per_year, x0, base_y, w, h):
     for y in years:
         v = per_year[y]
         bh = max(2.0, v / peak * h)
-        out.append(f"<rect x='{x:.1f}' y='{base_y-bh:.1f}' width='{bw:.1f}' height='{bh:.1f}' rx='4' fill='url(#bar)'/>")
-        out.append(T(f"{x+bw/2:.1f}", f"{base_y-bh-5:.1f}", fmt(v), 9, S["head"], 400, MONO, "middle"))
-        out.append(T(f"{x+bw/2:.1f}", base_y + 14, str(y), 9.5, S["sub"], 400, MONO, "middle"))
+        out += [f"<rect x='{x:.1f}' y='{base_y-bh:.1f}' width='{bw:.1f}' height='{bh:.1f}' rx='3' fill='url(#bar)'/>",
+                T(f"{x+bw/2:.1f}", f"{base_y-bh-5:.1f}", fmt(v), 9, CREAM, 400, MONO, "middle"),
+                T(f"{x+bw/2:.1f}", base_y + 14, str(y), 9.5, SUB, 400, MONO, "middle")]
         x += bw + gap
-    return ("<linearGradient id='bar' x1='0' y1='1' x2='0' y2='0'><stop offset='0' stop-color='#d4507c'/>"
+    return ("<linearGradient id='bar' x1='0' y1='1' x2='0' y2='0'><stop offset='0' stop-color='#ef6a3d'/>"
             f"<stop offset='1' stop-color='{GOLD}'/></linearGradient>" + "".join(out))
 
 
-def wrap_items(text, max_chars=40):
-    lines, cur = [], ""
-    for item in text.split(" · "):
-        nxt = f"{cur} · {item}" if cur else item
-        if len(nxt) > max_chars and cur:
-            lines.append(cur)
-            cur = item
-        else:
-            cur = nxt
-    return lines + [cur]
-
-
-def render_panels(stats):
-    scrim = ("<rect x='40' y='40' width='312' height='560' rx='20' fill='#060c24' fill-opacity='.62' "
-             f"stroke='{GOLD}' stroke-opacity='.25'/>"
-             "<rect x='848' y='40' width='312' height='560' rx='20' fill='#060c24' fill-opacity='.62' "
-             f"stroke='{GOLD}' stroke-opacity='.25'/>")
-
-    contacts = [("Google Developer", USERNAME), ("X (Twitter)", f"{USERNAME}"),
+def render_text(stats):
+    contacts = [("Google Developer", USERNAME), ("X (Twitter)", f"@{USERNAME}"),
                 ("Email", f"{USERNAME}@yahoo.com"), ("Google Play", USERNAME)]
-    left = [T(60, 100, escape(stats["name"]), 50, S["head"], 600, DISP, extra="letter-spacing='.5'"),
-            T(60, 130, "कृत्य । सहिष्णुता । मोक्षः", 14, S["sub"])]
+    left = [T(60, 84, escape(stats["name"]), 44, CREAM, 600, DISP, extra="letter-spacing='.5'"),
+            T(60, 112, "कृत्य । सहिष्णुता । मोक्षः", 14, SUB)]
     if stats["since"]:
         yrs = stats["years_active"]
-        left.append(T(60, 152, f"on GitHub since {stats['since']} · {yrs} yr{'s' if yrs != 1 else ''}",
-                      10.5, S["gold"], 400, MONO))
-    left.append(heading(60, 190, "Connect", 272))
+        left.append(T(60, 132, f"on GitHub since {stats['since']} · {yrs} yr{'s' if yrs != 1 else ''}",
+                      10.5, GOLD, 400, MONO))
+    left.append(heading(60, 166, "Connect", 340))
     for i, (label, value) in enumerate(contacts):
-        yy = 220 + i * 26
-        left.append(T(60, yy, escape(label), 11.5, S["text"], 600))
-        left.append(T(184, yy, escape(value), 11.5, S["sub"]))
-    for y, title, body in [
-        (336, "Hobby", "Reading · Exploring Places · Photography · Developer"),
-        (422, "Programming Languages", "HTML · CSS · JavaScript · TypeScript · Python · C · C++"),
-        (508, "Tools & Frameworks", "React · Docker · Express · FastAPI · REST · GitHub · RAG"),
-    ]:
-        left.append(heading(60, y, title, 272))
-        for j, line in enumerate(wrap_items(escape(body))):
-            left.append(T(60, y + 28 + j * 16, line, 11.5, S["sub"]))
-    left.append(T(60, 585, f"updated {format_ist_now()}", 9, S["sub"], 400, MONO, extra="opacity='.8'"))
+        yy = 192 + i * 22
+        left += [T(60, yy, escape(label), 11.5, CREAM, 600), T(178, yy, escape(value), 11.5, SUB)]
+    for y, title, body in [(290, "Hobbies & Passions", "Reading · Exploring Places · Photography · Developer"),
+                           (344, "Programming Languages", "HTML · CSS · JavaScript · TypeScript · Python · C · C++"),
+                           (398, "Tools & Frameworks", "React · Docker · Express · FastAPI · REST · GitHub · RAG")]:
+        left += [heading(60, y, title, 340), T(60, y + 26, escape(body), 11, SUB)]
+    left.append(T(60, 678, f"updated {format_ist_now()}", 9, CREAM, 400, MONO, extra="opacity='.7'"))
 
     since = f"since {stats['since']}" if stats["since"] else "all-time"
-    X0, PW = 864, 276
-    right = [
-        stat_card(X0, 62, fmt(stats["commits"]), f"commits {since}"),
-        stat_card(X0 + 146, 62, fmt(stats["loc"]), "lines of code"),
-        stat_card(X0, 130, fmt(stats["repos"]), "repositories"),
-        stat_card(X0 + 146, 130, fmt(stats["stars"]), "stars earned"),
-        heading(X0, 232, "Languages · by lines of code", PW),
-        lang_chart(stats["languages"], X0, 252, PW),
-        heading(X0, 450, "Commits per year", PW),
-        year_chart(stats["per_year"], X0, 566, PW, 70),
-    ]
-    return scrim + "".join(left) + "".join(right)
+    mid = [heading(450, 60, "Languages · by lines of code", 290), lang_chart(stats["languages"], 450, 82, 290)]
+    X0 = 810
+    right = [stat(X0, 78, fmt(stats["commits"]), f"commits {since}"),
+             stat(X0 + 170, 78, fmt(stats["loc"]), "lines of code"),
+             stat(X0, 152, fmt(stats["repos"]), "repositories"),
+             stat(X0 + 170, 152, fmt(stats["stars"]), "stars earned"),
+             heading(X0, 218, "Commits per year", 330),
+             year_chart(stats["per_year"], X0, 350, 330, 80)]
+    return "".join(left) + "".join(mid) + "".join(right)
 
 
 def generate_svg(stats, theme="mandala"):
     defs, body = background()
     return ("<?xml version='1.0' encoding='UTF-8'?>\n"
             f"<svg viewBox='0 0 {W} {H}' xmlns='http://www.w3.org/2000/svg'>\n"
-            f"<defs><style>{CSS}</style>{defs}</defs>\n{body}\n{render_panels(stats)}\n</svg>")
+            f"<defs><style>{CSS}</style>{defs}</defs>\n{body}\n{render_text(stats)}\n</svg>")
+
 
 
 def main():
